@@ -34,7 +34,7 @@ plant_data_original = pd.read_excel(path_plant_master)
 #print(customer_data_original.info())
 
 
-# In[7]:
+# In[50]:
 
 
 # Function to identify numeric features
@@ -81,12 +81,17 @@ def data_clean_formatt(df):
     #     for col in df_trimmed.columns:
     #       col = re.sub(r'/.*|\\.*', r'', col)
     # =============================================================================
-    df_trimmed.columns = df_trimmed.columns.str.replace(' ', '_')
-    df_trimmed.columns = df_trimmed.columns.str.strip('.')
-    df_trimmed.columns = df_trimmed.columns.str.lower()
 
     return df_trimmed
 
+#
+def data_trimming(df):
+    df_trimmed = df
+    df_trimmed.columns = df_trimmed.columns.str.replace(' ', '_')
+    df_trimmed.columns = df_trimmed.columns.str.strip('.')
+    df_trimmed.columns = df_trimmed.columns.str.lower()
+    
+    return df_trimmed
 
 #Get Name of DataFrame
 def get_df_name(df):
@@ -230,30 +235,64 @@ plt.xticks(rotation=60)
 plt.show()
 
 
-# In[20]:
+# In[107]:
 
 
-print(customer_data.head())
+customer_data_ = data_trimming(customer_data)
+customer_data_ = customer_data_.drop(columns = ['business_partner'])
+print(customer_data_.head())
 print("...."*30)
-print(customer_data.tail())
+print(customer_data_.tail())
+print(customer_data_['customer_no'].astype(str))
 
 
-# In[21]:
+# In[60]:
 
 
-print(invoice_data.head())
+invoice_data_ = data_trimming(invoice_data)
+print(invoice_data_.columns.to_list())
+print("=="*30)
+invoice_data_ = invoice_data_.drop(columns = ['unnamed:_0', 'print_status'])
+invoice_data_ = invoice_data_.rename(columns = {'area_/_locality':'area', 'plant_name1':'plant_name'})
+print(invoice_data_.head())
 print("...."*30)
-print(invoice_data.tail())
+print(invoice_data_.tail())
 
 
-# In[ ]:
+# In[108]:
 
 
+from sklearn_pandas import CategoricalImputer
 
 
+#Merging invoice_data_ & customer_data_
 
-# In[4]:
+#data_merged = pd.merge(invoice_data_, customer_data_, on='customer_no', how='outer')
+#data_merged = data_merged.sort_values(ascending = True, by = 'customer_no')
+customer_data_['customer_no'] = customer_data_['customer_no'].astype(str)
+invoice_data_['customer_no'] = invoice_data_['customer_no'].astype(str)
+data_merged = pd.merge(invoice_data_, customer_data_, on='customer_no', how='outer')
+#data_merged_1 = data_merged_1.sort_values(ascending = True, by = 'customer_no')
+
+print(data_merged.head())
+print("...."*30)
+print(data_merged.tail())
+
+#cust_mask = (data_merged['customer_no'] == 492314)
+#print(data_merged[cust_mask])
 
 
+# In[110]:
 
+
+print(data_merged_1.head())
+print("...."*30)
+print(data_merged_1.tail())
+print("==="*30)
+#cust_mask = data_merged['customer_no'] == 492314
+print(customer_data[customer_data['customer_no'] == 1])
+print("==="*30)
+print(invoice_data_[invoice_data_['customer_no'] == "1"])
+print("==="*30)
+print(data_merged[data_merged['customer_no'] == "1"])
 
