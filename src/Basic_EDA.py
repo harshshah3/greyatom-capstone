@@ -269,20 +269,33 @@ plant_data_original['Factory calendar'].value_counts()
 plant_data_original['Customer no. - plant'].isin(plant_data_original['Vendor number plant']).value_counts()
 
 
-# In[35]:
+# In[110]:
+
+
+plant_data_original
+plant_missing_data = missing_data(plant_data_original)
+plant_missing_data
+
+
+# In[105]:
 
 
 path_valid_pincodes = r'E:/Mahindra-Capstone/greyatom-capstone/data/Pincode_dir.csv'
 valid_pincode_data = pd.read_csv(path_valid_pincodes, engine='python')
-valid_pincode_data.head()
 
 
-# In[46]:
+# In[107]:
+
+
+valid_pincode_data.tail()
+
+
+# In[96]:
 
 
 valid_pincode_data = valid_pincode_data.sort_values(by='Pincode')
 valid_pincodes = valid_pincode_data.Pincode.unique()
-valid_pincodes
+len(valid_pincodes)
 
 
 # In[61]:
@@ -295,22 +308,118 @@ plant_data_original_1 = plant_data_original[np.isin(plant_data_original['Postal 
 plant_data_original_1.head(10)
 
 
-# In[93]:
+# In[102]:
 
 
 invoice_data_copy = invoice_data
 invoice_data_copy.shape
 
 
-# In[95]:
+# In[103]:
+
+
+invoice_data_copy.head()
+
+
+# In[100]:
 
 
 print(len(plant_data_original['Postal Code'].unique()))
 print(len(invoice_data_copy['Pin code'].unique()))
-# invoice_data_1 = invoice_data_copy[np.isin(invoice_data_copy['Pin code'], plant_data_original_1['Postal Code']) == True]
-# print("Compared Invoice_Data Shape:", invoice_data_1.shape)
-
+invoice_data_1 = invoice_data_copy[np.isin(invoice_data_copy['Pin code'], valid_pincodes) == False]
+print("Compared Invoice_Data Shape:", invoice_data_1.shape)
+print("Invoice_Data Shape:", invoice_data.shape)
 # invoice_data_1.head()
+#plant_data_original['Postal Code'].value_counts().index.size
+
+
+# In[138]:
+
+
+invoice_data_2 = invoice_data_copy[np.isin(invoice_data_copy['Pin code'], valid_pincodes) == True]
+invoice_data_2.drop(columns = ['Unnamed: 0', 'Print Status', 'Area / Locality'], axis=1, inplace= True)
+invoice_data_2.shape
+
+
+# ##### Dirty pincode data
+
+# In[108]:
+
+
+invoice_data_1.head(10)
+
+
+# In[145]:
+
+
+#Merge - Take city, Pincode from Plant_Data for accurate values.. left_on = 'Plant' , right_on = 'Plant'
+invoice_columns = ['Cust Type', 'Customer No.', 'Gate Pass Time', 'Invoice Date', 'Invoice No', 'Invoice Time', 
+                   'Job Card No', 'JobCard Date', 'JobCard Time', 'KMs Reading', 'Labour Total', 'Make', 'Misc Total', 
+                   'Model', 'OSL Total', 'Order Type', 'Order Type', 'Parts Total', 'Plant', 'Recovrbl Exp', 
+                   'Total Amt Wtd Tax.', 'User ID']
+plant_columns = ['Plant', 'Name 1', 'Postal Code', 'City', 'State']
+result_invoice_df = pd.merge(invoice_data_1[invoice_columns],
+                             plant_data_original_1[plant_columns],
+                             left_on= 'Plant',
+                             right_on= 'Plant',
+                             how= 'inner')
+        
+# invoice_columns = invoice_data_1.columns.tolist()
+# print(*invoice_columns, sep = ' \t |')
+# print("===="*30)
+# plant_columns = plant_data_original_1.columns.tolist()
+# print(*plant_columns, sep = ' \t |')
+result_invoice_df.shape
+
+
+# In[141]:
+
+
+plant_data_original_1['Name 1'].value_counts().index.size
+#invoice_data['Plant Name1'].value_counts().index.size
+
+
+# In[142]:
+
+
+inv_columns = result_invoice_df.columns.tolist()
+print(*inv_columns, sep = ' \t |')
+
+
+# In[146]:
+
+
+result_invoice_df.rename({'Name 1':'Plant Name1', 'Postal Code':'Pin code','State':'District'})
+result_invoice_df.shape
+
+
+# In[151]:
+
+
+res_inv_missing_data = missing_data(result_invoice_df)
+res_inv_missing_data
+
+
+# In[158]:
+
+
+#merged_inv_df = pd.concat([invoice_data_2, result_invoice_df], ignore_index=True)
+merged_inv_df = pd.concat([invoice_data_2.reset_index(drop=True), result_invoice_df.reset_index(drop=True)], axis=0)
+#merged_inv_df = invoice_data_2.append(result_invoice_df)
+merged_inv_df.shape
+
+
+# In[155]:
+
+
+merged_inv_df.head(10)
+
+
+# In[123]:
+
+
+result_invoice_missing_data = missing_data(result_invoice_df)
+result_invoice_missing_data
 
 
 # In[ ]:
