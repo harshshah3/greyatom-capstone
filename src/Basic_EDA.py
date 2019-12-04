@@ -222,7 +222,7 @@ inv_missing_data
 # print("===="*30)
 
 
-# In[71]:
+# In[231]:
 
 
 #Dropping cols with 40% thresold
@@ -230,11 +230,35 @@ invoice_data = drop_missing(invoice_data_original, inv_missing_data, 40)
 invoice_data.shape
 
 
-# In[18]:
+# In[232]:
 
 
 #DataTypes
 check_datatypes(invoice_data)
+
+
+# ## Importing Valid Pinocode Data of India
+# ### Downloaded from [here](https://data.gov.in/catalog/all-india-pincode-directory)
+
+# In[105]:
+
+
+path_valid_pincodes = r'E:/Mahindra-Capstone/greyatom-capstone/data/Pincode_dir.csv'
+valid_pincode_data = pd.read_csv(path_valid_pincodes, engine='python')
+
+
+# In[107]:
+
+
+valid_pincode_data.tail()
+
+
+# In[218]:
+
+
+valid_pincode_data = valid_pincode_data.sort_values(by='Pincode')
+valid_pincodes = valid_pincode_data.Pincode.unique()
+print("Unique Pin codes across India ::",len(valid_pincodes))
 
 
 # ### Plant Master Data
@@ -251,6 +275,8 @@ plant_data_original.head()
 plant_data_original['Plant'].isin(plant_data_original['Valuation Area']).value_counts()
 
 
+# ##### Identical columns. Hence 'Valuation Area' is of NO-USE.
+
 # In[54]:
 
 
@@ -262,6 +288,8 @@ plant_data_original.shape
 
 plant_data_original['Factory calendar'].value_counts()
 
+
+# ##### Single Value Column. Hence 'Factory Calendar' is of NO-USE.
 
 # In[37]:
 
@@ -277,99 +305,222 @@ plant_missing_data = missing_data(plant_data_original)
 plant_missing_data
 
 
-# In[105]:
+# ##### Vendor number plant has 99%+ missing vals. Hence is of NO-USE.
 
+# ## MERGING Invoice-Plant_Master Data
 
-path_valid_pincodes = r'E:/Mahindra-Capstone/greyatom-capstone/data/Pincode_dir.csv'
-valid_pincode_data = pd.read_csv(path_valid_pincodes, engine='python')
-
-
-# In[107]:
-
-
-valid_pincode_data.tail()
-
-
-# In[96]:
-
-
-valid_pincode_data = valid_pincode_data.sort_values(by='Pincode')
-valid_pincodes = valid_pincode_data.Pincode.unique()
-len(valid_pincodes)
-
-
-# In[61]:
+# In[233]:
 
 
 #ix = np.isin(plant_data_original['Postal Code'], valid_pincodes)
 #unique_elements, counts_elements = np.unique(ix, return_counts=True)
 #counts_elements
 plant_data_original_1 = plant_data_original[np.isin(plant_data_original['Postal Code'], valid_pincodes) == True]
-plant_data_original_1.head(10)
+print("Plant_Data with Valid pincodes -- %:",plant_data_original_1.shape[0]/ plant_data_original.shape[0] * 100)
 
 
-# In[102]:
+# In[234]:
 
 
 invoice_data_copy = invoice_data
+
 invoice_data_copy.shape
 
 
-# In[103]:
+# In[235]:
 
 
-invoice_data_copy.head()
+print("Unique Pin codes in Plant_Master Data: ",len(plant_data_original['Postal Code'].unique()))
+print("Unique Pin codes in Invoice Data: ",len(invoice_data_copy['Pin code'].unique()))
 
 
-# In[100]:
+# In[236]:
 
 
-print(len(plant_data_original['Postal Code'].unique()))
-print(len(invoice_data_copy['Pin code'].unique()))
+invoice_data_copy.drop(columns=['Unnamed: 0', 'Print Status', 'Area / Locality'], axis=1, inplace= True)
+print("Original Invoice_Data Shape:", invoice_data_copy.shape)
+
+
+# #### Dirty Pincode Data
+
+# In[237]:
+
+
+#invoice_data_1 --- INVALID Pincodes
 invoice_data_1 = invoice_data_copy[np.isin(invoice_data_copy['Pin code'], valid_pincodes) == False]
-print("Compared Invoice_Data Shape:", invoice_data_1.shape)
-print("Invoice_Data Shape:", invoice_data.shape)
-# invoice_data_1.head()
-#plant_data_original['Postal Code'].value_counts().index.size
+print("Invoice_Data with Invalid/Dirty pincodes -- %:", invoice_data_1.shape[0]/ invoice_data_copy.shape[0] * 100)
 
 
-# In[138]:
+# ##### Valid pincode data
+
+# In[238]:
 
 
+#invoice_data_2 --- VALID Pincodes
 invoice_data_2 = invoice_data_copy[np.isin(invoice_data_copy['Pin code'], valid_pincodes) == True]
-invoice_data_2.drop(columns = ['Unnamed: 0', 'Print Status', 'Area / Locality'], axis=1, inplace= True)
-invoice_data_2.shape
+print("Invoice_Data with VALID pincodes -- %:", invoice_data_2.shape[0]/ invoice_data_copy.shape[0] * 100)
 
 
-# ##### Dirty pincode data
-
-# In[108]:
+# In[255]:
 
 
-invoice_data_1.head(10)
+len(invoice_data_copy['Plant Name1'].unique())
+len(plant_data_original_1['Name 1'].unique())
+len(invoice_data_1['CITY'].unique())
 
 
-# In[145]:
+# In[258]:
 
 
-#Merge - Take city, Pincode from Plant_Data for accurate values.. left_on = 'Plant' , right_on = 'Plant'
-invoice_columns = ['Cust Type', 'Customer No.', 'Gate Pass Time', 'Invoice Date', 'Invoice No', 'Invoice Time', 
+len(plant_data_original_1['City'].unique())
+bool_ = plant_data_original_1['City'] == plant_data_original_1['Name 2']
+bool_.value_counts()
+
+
+# In[260]:
+
+
+len(plant_data_original_1['State'].unique())
+len(invoice_data_1['District'].unique())
+
+
+# #### Merging - Take [City, Pincode, District, Plant_Name] from Plant_Data for accurate values.
+
+# In[295]:
+
+
+invoice_columns = ['CITY','Cust Type', 'Customer No.', 'District', 'Gate Pass Time', 'Invoice Date', 'Invoice No', 'Invoice Time', 
                    'Job Card No', 'JobCard Date', 'JobCard Time', 'KMs Reading', 'Labour Total', 'Make', 'Misc Total', 
-                   'Model', 'OSL Total', 'Order Type', 'Order Type', 'Parts Total', 'Plant', 'Recovrbl Exp', 
+                   'Model', 'OSL Total', 'Order Type', 'Parts Total', 'Plant', 'Plant Name1', 'Recovrbl Exp','Regn No',
                    'Total Amt Wtd Tax.', 'User ID']
-plant_columns = ['Plant', 'Name 1', 'Postal Code', 'City', 'State']
-result_invoice_df = pd.merge(invoice_data_1[invoice_columns],
-                             plant_data_original_1[plant_columns],
-                             left_on= 'Plant',
-                             right_on= 'Plant',
-                             how= 'inner')
-        
+plant_columns = ['Plant', 'Name 2', 'Postal Code']
+
+df_merged_1 = pd.merge(invoice_data_1[invoice_columns],
+                     plant_data_original_1[plant_columns],
+                     left_on= 'Plant',
+                     right_on= 'Plant',
+                     how= 'inner')
+
+#df_merged_1.rename({"City":"CITY", "Name 1":"Plant Name1", "State":"District", "Postal Code":"Pin code"},axis=1,inplace=True)
+df_merged_1.rename({"Postal Code":"Pin code"}, axis=1, inplace=True)
+df_merged_1.shape      
+
+
+# In[296]:
+
+
+len(plant_data_original_1['Postal Code'].unique())
+
+
+# In[297]:
+
+
+invoice_columns = ['CITY','Cust Type', 'Customer No.', 'District', 'Gate Pass Time', 'Invoice Date', 'Invoice No', 
+                   'Invoice Time', 'Job Card No', 'JobCard Date', 'JobCard Time', 'KMs Reading', 'Labour Total', 'Make', 
+                   'Misc Total', 'Model', 'OSL Total', 'Order Type', 'Parts Total', 'Pin code','Plant', 'Plant Name1', 
+                   'Recovrbl Exp', 'Regn No','Total Amt Wtd Tax.', 'User ID']
+plant_columns = ['Plant', 'Name 2']
+
+df_merged_2 = pd.merge(invoice_data_2[invoice_columns],
+                     plant_data_original_1[plant_columns],
+                     left_on= 'Plant',
+                     right_on= 'Plant',
+                     how= 'left')
+# df_merged_2.rename({"City":"CITY", "Name 1":"Plant Name1", "State":"District", "Postal Code":"Pin code"},
+#                  axis=1, 
+#                  inplace=True)
+df_merged_2.shape      
+
+
+# In[ ]:
+
+
+
+
+
+# In[298]:
+
+
+len(df_merged_2['Pin code'].unique())
+
+
+# In[299]:
+
+
+city_series = pd.Series(plant_data_original_1['City'].values,index=plant_data_original_1['Name 1']).to_dict()
+
+
+# In[300]:
+
+
+df_merged_2['City'] = df_merged_2['Plant Name1'].map(city_series)
+
+
+# In[307]:
+
+
+df_merged_2.loc[600:620,['Plant Name1', 'City', 'CITY']]
+# df_123 = df_merged_2[np.isin(df_merged_2['Plant Name1'], plant_data_original_1['Name 1']) == True]
+# df_123.shape
+
+
+# In[248]:
+
+
+df_merged_2['City'].value_counts()
+
+
+# In[ ]:
+
+
 # invoice_columns = invoice_data_1.columns.tolist()
 # print(*invoice_columns, sep = ' \t |')
 # print("===="*30)
 # plant_columns = plant_data_original_1.columns.tolist()
 # print(*plant_columns, sep = ' \t |')
-result_invoice_df.shape
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[201]:
+
+
+bool_val = (invoice_data_2.columns == df_merged.columns)
+bool_val
+
+
+# In[ ]:
+
+
+
+
+
+# In[200]:
+
+
+result_invoice_df = result_invoice_df[inv_cols]
+
+
+# In[173]:
+
+
+invoice_data_1[invoice_columns].shape
+
+
+# In[ ]:
+
+
+
 
 
 # In[141]:
@@ -379,18 +530,17 @@ plant_data_original_1['Name 1'].value_counts().index.size
 #invoice_data['Plant Name1'].value_counts().index.size
 
 
-# In[142]:
+# In[194]:
 
 
 inv_columns = result_invoice_df.columns.tolist()
 print(*inv_columns, sep = ' \t |')
 
 
-# In[146]:
+# In[ ]:
 
 
-result_invoice_df.rename({'Name 1':'Plant Name1', 'Postal Code':'Pin code','State':'District'})
-result_invoice_df.shape
+
 
 
 # In[151]:
@@ -400,25 +550,25 @@ res_inv_missing_data = missing_data(result_invoice_df)
 res_inv_missing_data
 
 
-# In[158]:
+# In[204]:
 
 
 #merged_inv_df = pd.concat([invoice_data_2, result_invoice_df], ignore_index=True)
-merged_inv_df = pd.concat([invoice_data_2.reset_index(drop=True), result_invoice_df.reset_index(drop=True)], axis=0)
+merged_inv_df = pd.concat([result_invoice_df, invoice_data_2], axis=0)
 #merged_inv_df = invoice_data_2.append(result_invoice_df)
 merged_inv_df.shape
 
 
-# In[155]:
+# In[205]:
 
 
 merged_inv_df.head(10)
 
 
-# In[123]:
+# In[206]:
 
 
-result_invoice_missing_data = missing_data(result_invoice_df)
+result_invoice_missing_data = missing_data(merged_inv_df)
 result_invoice_missing_data
 
 
@@ -432,6 +582,12 @@ data_merged = pd.merge(invoice_data_, customer_data_, on='customer_no', how='lef
 #data_merged_1 = data_merged_1.sort_values(ascending = True, by = 'customer_no')
 
 print(data_merged.head())
+
+
+# In[ ]:
+
+
+
 
 
 # ##### 1). Plant column has the same values as in Valuation Area - Discard 'Valuation Area'
