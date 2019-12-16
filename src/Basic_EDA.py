@@ -28,7 +28,7 @@ path_plant_master = r'E:/Mahindra-Capstone/greyatom-capstone/data/Plant Master.x
 
 # ## Loading the data
 
-# In[69]:
+# In[2]:
 
 
 invoice_data_original = pd.read_csv(path_invoice)
@@ -166,6 +166,11 @@ cust_missing_data
 # print("===="*30)
 
 
+# ### Data Trimming  
+# 
+# 
+# ###### Trim Column Name, Discard unwanted columns, Strip unwanted chars from data
+
 # In[11]:
 
 
@@ -174,27 +179,36 @@ customer_data = drop_missing(customer_data_original,cust_missing_data,90)
 customer_data.shape
 
 
+# In[12]:
+
+
+customer_data = data_trimming(customer_data)
+customer_data = customer_data.drop(columns = ['business_partner'])
+customer_data.head()
+#print(customer_data_['customer_no'].astype(str))
+
+
 # ### Invoice_data
 
-# In[12]:
+# In[13]:
 
 
 invoice_data_original.head()
 
 
-# In[68]:
+# In[14]:
 
 
 invoice_data_original.shape
 
 
-# In[29]:
+# In[15]:
 
 
 #invoice_data_original.info()
 
 
-# In[14]:
+# In[16]:
 
 
 #Numerical cols
@@ -202,7 +216,7 @@ numeric_columns = numeric_features(invoice_data_original)
 print(*numeric_columns.columns.tolist(), sep = "\t| ")
 
 
-# In[15]:
+# In[17]:
 
 
 #Categorical cols
@@ -210,7 +224,7 @@ categorical_columns = categorical_features(invoice_data_original)
 print(*categorical_columns.columns.tolist(), sep = "\t| ")
 
 
-# In[70]:
+# In[18]:
 
 
 #Missing data
@@ -222,7 +236,12 @@ inv_missing_data
 # print("===="*30)
 
 
-# In[231]:
+# ### Data Trimming  
+# 
+# 
+# ###### Trim Column Name, Discard unwanted columns, Strip unwanted chars from data
+
+# In[19]:
 
 
 #Dropping cols with 40% thresold
@@ -230,46 +249,36 @@ invoice_data = drop_missing(invoice_data_original, inv_missing_data, 40)
 invoice_data.shape
 
 
-# In[232]:
+# In[20]:
 
 
 #DataTypes
-check_datatypes(invoice_data)
+#check_datatypes(invoice_data)
 
 
-# ## Importing Valid Pinocode Data of India
-# ### Downloaded from [here](https://data.gov.in/catalog/all-india-pincode-directory)
-
-# In[105]:
+# In[21]:
 
 
-path_valid_pincodes = r'E:/Mahindra-Capstone/greyatom-capstone/data/Pincode_dir.csv'
-valid_pincode_data = pd.read_csv(path_valid_pincodes, engine='python')
-
-
-# In[107]:
-
-
-valid_pincode_data.tail()
-
-
-# In[218]:
-
-
-valid_pincode_data = valid_pincode_data.sort_values(by='Pincode')
-valid_pincodes = valid_pincode_data.Pincode.unique()
-print("Unique Pin codes across India ::",len(valid_pincodes))
+invoice_data = data_trimming(invoice_data)
+invoice_data = invoice_data.drop(columns = ['unnamed:_0', 'print_status'])
+invoice_data.head()
 
 
 # ### Plant Master Data
 
-# In[19]:
+# In[22]:
 
 
 plant_data_original.head()
 
 
-# In[30]:
+# In[23]:
+
+
+plant_data_original.shape
+
+
+# In[24]:
 
 
 plant_data_original['Plant'].isin(plant_data_original['Valuation Area']).value_counts()
@@ -277,13 +286,7 @@ plant_data_original['Plant'].isin(plant_data_original['Valuation Area']).value_c
 
 # ##### Identical columns. Hence 'Valuation Area' is of NO-USE.
 
-# In[54]:
-
-
-plant_data_original.shape
-
-
-# In[31]:
+# In[25]:
 
 
 plant_data_original['Factory calendar'].value_counts()
@@ -291,13 +294,13 @@ plant_data_original['Factory calendar'].value_counts()
 
 # ##### Single Value Column. Hence 'Factory Calendar' is of NO-USE.
 
-# In[37]:
+# In[26]:
 
 
 plant_data_original['Customer no. - plant'].isin(plant_data_original['Vendor number plant']).value_counts()
 
 
-# In[110]:
+# In[27]:
 
 
 plant_data_original
@@ -307,171 +310,217 @@ plant_missing_data
 
 # ##### Vendor number plant has 99%+ missing vals. Hence is of NO-USE.
 
-# ## MERGING Invoice-Plant_Master Data
+# ### Data Trimming  
+# 
+# 
+# ###### Trim Column Name, Discard unwanted columns, Strip unwanted chars from data
 
-# In[233]:
-
-
-#ix = np.isin(plant_data_original['Postal Code'], valid_pincodes)
-#unique_elements, counts_elements = np.unique(ix, return_counts=True)
-#counts_elements
-plant_data_original_1 = plant_data_original[np.isin(plant_data_original['Postal Code'], valid_pincodes) == True]
-print("Plant_Data with Valid pincodes -- %:",plant_data_original_1.shape[0]/ plant_data_original.shape[0] * 100)
+# In[28]:
 
 
-# In[234]:
+#Dropping cols with 90% thresold
+plant_data = drop_missing(plant_data_original, plant_missing_data, 90)
+plant_data = plant_data.drop(columns = ['Factory calendar'], axis=1)
+plant_data.shape
+
+
+# In[29]:
+
+
+plant_data = data_trimming(plant_data)
+plant_data.head()
+
+
+# ## Importing Valid Pinocode Data of India
+# ### Downloaded from [here](https://data.gov.in/catalog/all-india-pincode-directory)
+
+# In[30]:
+
+
+path_pincode_data = r'E:/Mahindra-Capstone/greyatom-capstone/data/Pincode_dir.csv'
+gov_auth_pincode_data = pd.read_csv(path_pincode_data, engine='python')
+
+
+# In[31]:
+
+
+gov_auth_pincode_data.tail()
+
+
+# In[32]:
+
+
+gov_auth_pincode_data = gov_auth_pincode_data.sort_values(by='Pincode')
+pincodes = gov_auth_pincode_data.Pincode.unique()
+print("Unique Pin codes across India ::",len(pincodes))
+
+
+# In[33]:
+
+
+path_pincodes = r'E:/Mahindra-Capstone/greyatom-capstone/data/Pincode_City_data.csv'
+pincode_data = pd.read_csv(path_pincodes)
+
+
+# In[34]:
+
+
+pincode_data.tail()
+
+
+# In[35]:
+
+
+pincode_data = pincode_data.sort_values(by='Pincode')
+pincodes_list = pincode_data.Pincode.unique()
+print("Unique Pin codes across India ::",len(pincodes_list))
+
+
+# In[36]:
+
+
+valid_pincodes = pincode_data[np.isin(pincode_data['Pincode'], pincodes) == True]
+valid_pincodes_unique = valid_pincodes.Pincode.unique()
+valid_cities_unique = valid_pincodes.City.unique()
+print("Unique Cities across India ::",len(valid_cities_unique))
+
+
+# In[37]:
+
+
+valid_pincodes.head()
+
+
+# In[38]:
 
 
 invoice_data_copy = invoice_data
-
-invoice_data_copy.shape
-
-
-# In[235]:
+print(invoice_data_copy.shape)
 
 
-print("Unique Pin codes in Plant_Master Data: ",len(plant_data_original['Postal Code'].unique()))
-print("Unique Pin codes in Invoice Data: ",len(invoice_data_copy['Pin code'].unique()))
+# In[39]:
 
 
-# In[236]:
+invoice_data_valid = invoice_data_copy[np.isin(invoice_data_copy['pin_code'], valid_pincodes_unique) == True]
+print("Invoice_Data with Valid pincodes -- %:",invoice_data_valid.shape[0]/ invoice_data_copy.shape[0] * 100)
 
 
-invoice_data_copy.drop(columns=['Unnamed: 0', 'Print Status', 'Area / Locality'], axis=1, inplace= True)
-print("Original Invoice_Data Shape:", invoice_data_copy.shape)
+# ##### Out of 492314 rows, 386542 (78.5%) Pincode-Values are valid. So, replacing corresponding dirty value of city_name with a valid city_name from externally imported data. 
+
+# In[40]:
+
+
+#Cities' name replaced for every valid pincode
+invoice_data_copy2 = invoice_data_copy.merge(valid_pincodes[['Pincode', 'City']],
+                                         left_on= 'pin_code',
+                                         right_on= 'Pincode')
+print(invoice_data_copy2.shape)
+
+
+# In[41]:
+
+
+invoice_data_copy.job_card_no.value_counts()
+
+
+# In[42]:
+
+
+#Dropping duplicate rows
+invoice_data_copy2= invoice_data_copy2.drop_duplicates(subset=['invoice_no'])
+print(invoice_data_copy2.shape)
+
+
+# In[43]:
+
+
+#Preparing the dataframe-'invoice_data_copy3' with invalid pincodes to get merged and result in original df- 'invoice_data' with cleaned city name
+invoice_data_copy3 = invoice_data_copy[np.isin(invoice_data_copy['invoice_no'], invoice_data_copy2['invoice_no'].values) == False]
+print(invoice_data_copy3.shape)
+
+
+# In[44]:
+
+
+invoice_data_copy3['City'] = invoice_data_copy3.loc[:,['city']]
+invoice_data_copy3['Pincode'] = invoice_data_copy3.loc[:,['pin_code']]
+print(invoice_data_copy3.shape)
+
+
+# In[45]:
+
+
+invoice_data_copy4 = pd.concat([invoice_data_copy2, invoice_data_copy3], axis=0)
+print(invoice_data_copy4.shape)
+
+
+# In[46]:
+
+
+invoice_data = invoice_data_copy4
+invoice_data = invoice_data.drop(columns=['city','pin_code'], axis=1)
+print(invoice_data.shape)
+
+
+# ## MERGING Invoice-Plant_Master Data
+
+# ##### Valid pincode-city data
+
+# In[47]:
+
+
+invoice_data_valid_cities = invoice_data[np.isin(invoice_data['City'], valid_cities_unique) == True]
+invoice_data_valid_pinC = invoice_data[np.isin(invoice_data['Pincode'], valid_pincodes_unique) == True]
+print("Invoice_Data with Valid Pincodes  -- %:",invoice_data_valid_pinC.shape[0]/ invoice_data.shape[0] * 100)
+print("Invoice_Data with Valid City name -- %:",invoice_data_valid_cities.shape[0]/ invoice_data.shape[0] * 100)
 
 
 # #### Dirty Pincode Data
 
-# In[237]:
+# In[48]:
 
 
 #invoice_data_1 --- INVALID Pincodes
-invoice_data_1 = invoice_data_copy[np.isin(invoice_data_copy['Pin code'], valid_pincodes) == False]
-print("Invoice_Data with Invalid/Dirty pincodes -- %:", invoice_data_1.shape[0]/ invoice_data_copy.shape[0] * 100)
+invoice_data_1 = invoice_data_original[np.isin(invoice_data_original['Pin code'], valid_pincodes_unique) == False]
+print("Invoice_Data with Invalid/Dirty pincodes -- %:", invoice_data_1.shape[0]/ invoice_data_original.shape[0] * 100)
 
 
-# ##### Valid pincode data
-
-# In[238]:
+# In[49]:
 
 
-#invoice_data_2 --- VALID Pincodes
-invoice_data_2 = invoice_data_copy[np.isin(invoice_data_copy['Pin code'], valid_pincodes) == True]
-print("Invoice_Data with VALID pincodes -- %:", invoice_data_2.shape[0]/ invoice_data_copy.shape[0] * 100)
+inv_missing_data = missing_data(invoice_data)
+inv_missing_data
 
 
-# In[255]:
+# ### Filling missing value with tag :- "no info"
+
+# In[50]:
 
 
-len(invoice_data_copy['Plant Name1'].unique())
-len(plant_data_original_1['Name 1'].unique())
-len(invoice_data_1['CITY'].unique())
-
-
-# In[258]:
-
-
-len(plant_data_original_1['City'].unique())
-bool_ = plant_data_original_1['City'] == plant_data_original_1['Name 2']
-bool_.value_counts()
-
-
-# In[260]:
-
-
-len(plant_data_original_1['State'].unique())
-len(invoice_data_1['District'].unique())
+invoice_data[['model', 'City', 'regn_no', 'area_/_locality']] = invoice_data[['model', 'City', 'regn_no', 'area_/_locality']].fillna('NO_INFO')
+invoice_data.isnull().sum()
 
 
 # #### Merging - Take [City, Pincode, District, Plant_Name] from Plant_Data for accurate values.
 
-# In[295]:
+# In[51]:
 
 
-invoice_columns = ['CITY','Cust Type', 'Customer No.', 'District', 'Gate Pass Time', 'Invoice Date', 'Invoice No', 'Invoice Time', 
-                   'Job Card No', 'JobCard Date', 'JobCard Time', 'KMs Reading', 'Labour Total', 'Make', 'Misc Total', 
-                   'Model', 'OSL Total', 'Order Type', 'Parts Total', 'Plant', 'Plant Name1', 'Recovrbl Exp','Regn No',
-                   'Total Amt Wtd Tax.', 'User ID']
-plant_columns = ['Plant', 'Name 2', 'Postal Code']
+# invoice_columns = ['CITY','Cust Type', 'Customer No.', 'District', 'Gate Pass Time', 'Invoice Date', 'Invoice No', 'Invoice Time', 
+#                    'Job Card No', 'JobCard Date', 'JobCard Time', 'KMs Reading', 'Labour Total', 'Make', 'Misc Total', 
+#                    'Model', 'OSL Total', 'Order Type', 'Parts Total', 'Plant', 'Plant Name1', 'Recovrbl Exp','Regn No',
+#                    'Total Amt Wtd Tax.', 'User ID']
+# plant_columns = ['Plant', 'Name 2', 'Postal Code']
 
-df_merged_1 = pd.merge(invoice_data_1[invoice_columns],
-                     plant_data_original_1[plant_columns],
-                     left_on= 'Plant',
-                     right_on= 'Plant',
-                     how= 'inner')
+# df_merged_1 = pd.merge(invoice_data_1[invoice_columns],
+#                      plant_data_original_1[plant_columns],
+#                      left_on= 'Plant',
+#                      right_on= 'Plant',
+#                      how= 'inner')
 
-#df_merged_1.rename({"City":"CITY", "Name 1":"Plant Name1", "State":"District", "Postal Code":"Pin code"},axis=1,inplace=True)
-df_merged_1.rename({"Postal Code":"Pin code"}, axis=1, inplace=True)
-df_merged_1.shape      
-
-
-# In[296]:
-
-
-len(plant_data_original_1['Postal Code'].unique())
-
-
-# In[297]:
-
-
-invoice_columns = ['CITY','Cust Type', 'Customer No.', 'District', 'Gate Pass Time', 'Invoice Date', 'Invoice No', 
-                   'Invoice Time', 'Job Card No', 'JobCard Date', 'JobCard Time', 'KMs Reading', 'Labour Total', 'Make', 
-                   'Misc Total', 'Model', 'OSL Total', 'Order Type', 'Parts Total', 'Pin code','Plant', 'Plant Name1', 
-                   'Recovrbl Exp', 'Regn No','Total Amt Wtd Tax.', 'User ID']
-plant_columns = ['Plant', 'Name 2']
-
-df_merged_2 = pd.merge(invoice_data_2[invoice_columns],
-                     plant_data_original_1[plant_columns],
-                     left_on= 'Plant',
-                     right_on= 'Plant',
-                     how= 'left')
-# df_merged_2.rename({"City":"CITY", "Name 1":"Plant Name1", "State":"District", "Postal Code":"Pin code"},
-#                  axis=1, 
-#                  inplace=True)
-df_merged_2.shape      
-
-
-# In[ ]:
-
-
-
-
-
-# In[298]:
-
-
-len(df_merged_2['Pin code'].unique())
-
-
-# In[299]:
-
-
-city_series = pd.Series(plant_data_original_1['City'].values,index=plant_data_original_1['Name 1']).to_dict()
-
-
-# In[300]:
-
-
-df_merged_2['City'] = df_merged_2['Plant Name1'].map(city_series)
-
-
-# In[307]:
-
-
-df_merged_2.loc[600:620,['Plant Name1', 'City', 'CITY']]
-# df_123 = df_merged_2[np.isin(df_merged_2['Plant Name1'], plant_data_original_1['Name 1']) == True]
-# df_123.shape
-
-
-# In[248]:
-
-
-df_merged_2['City'].value_counts()
-
-
-# In[ ]:
-
+# df_merged_1.rename({"City":"CITY", "Name 1":"Plant Name1", "State":"District", "Postal Code":"Pin code"},axis=1,inplace=True)
+# df_merged_1.rename({"Postal Code":"Pin code"}, axis=1, inplace=True)
+# df_merged_1.shape 
 
 # invoice_columns = invoice_data_1.columns.tolist()
 # print(*invoice_columns, sep = ' \t |')
@@ -480,180 +529,42 @@ df_merged_2['City'].value_counts()
 # print(*plant_columns, sep = ' \t |')
 
 
-# In[ ]:
+# In[52]:
 
 
+customer_data['customer_no'] = customer_data['customer_no'].astype(str)
+invoice_data['customer_no'] = invoice_data['customer_no'].astype(str)
 
-
-
-# In[ ]:
-
-
-
-
-
-# In[201]:
-
-
-bool_val = (invoice_data_2.columns == df_merged.columns)
-bool_val
-
-
-# In[ ]:
-
-
-
-
-
-# In[200]:
-
-
-result_invoice_df = result_invoice_df[inv_cols]
-
-
-# In[173]:
-
-
-invoice_data_1[invoice_columns].shape
-
-
-# In[ ]:
-
-
-
-
-
-# In[141]:
-
-
-plant_data_original_1['Name 1'].value_counts().index.size
-#invoice_data['Plant Name1'].value_counts().index.size
-
-
-# In[194]:
-
-
-inv_columns = result_invoice_df.columns.tolist()
-print(*inv_columns, sep = ' \t |')
-
-
-# In[ ]:
-
-
-
-
-
-# In[151]:
-
-
-res_inv_missing_data = missing_data(result_invoice_df)
-res_inv_missing_data
-
-
-# In[204]:
-
-
-#merged_inv_df = pd.concat([invoice_data_2, result_invoice_df], ignore_index=True)
-merged_inv_df = pd.concat([result_invoice_df, invoice_data_2], axis=0)
-#merged_inv_df = invoice_data_2.append(result_invoice_df)
-merged_inv_df.shape
-
-
-# In[205]:
-
-
-merged_inv_df.head(10)
-
-
-# In[206]:
-
-
-result_invoice_missing_data = missing_data(merged_inv_df)
-result_invoice_missing_data
-
-
-# In[ ]:
-
-
-customer_data_['customer_no'] = customer_data_['customer_no'].astype(str)
-invoice_data_['customer_no'] = invoice_data_['customer_no'].astype(str)
-
-data_merged = pd.merge(invoice_data_, customer_data_, on='customer_no', how='left')
+data_merged = pd.merge(invoice_data, customer_data, on='customer_no', how='left')
 #data_merged_1 = data_merged_1.sort_values(ascending = True, by = 'customer_no')
 
-print(data_merged.head())
+data_merged.head()
 
 
-# In[ ]:
+# In[53]:
 
 
+df_missing_vals = missing_data(data_merged)
+df_missing_vals
 
 
-
-# ##### 1). Plant column has the same values as in Valuation Area - Discard 'Valuation Area'
-# ##### 2). Factory calendar column is a single value column - OF NO USE
-
-# In[20]:
+# In[54]:
 
 
-plant_data_original.shape
-
-
-# In[21]:
-
-
-plant_data_original.info()
-
-
-# In[22]:
-
-
-#Numerical cols
-numeric_columns = numeric_features(plant_data_original)
-print(*numeric_columns.columns.tolist(), sep = "\t| ")
-
-
-# In[23]:
-
-
-#Categorical cols
-categorical_columns = categorical_features(plant_data_original)
-print(*categorical_columns.columns.tolist(), sep = "\t| ")
-
-
-# In[24]:
-
-
-#DataTypes
-check_datatypes(plant_data_original)
-
-
-# In[25]:
-
-
-#Missing data
-plant_missing_data = missing_data(plant_data_original)
-plant_missing_data
-# #Missing data for rows
-# rows_percentage_1 = (1 - len(plant_data_original.dropna(thresh=40)) / len(plant_data_original)) * 100
-# print("Missing rows %:  {} with 40 columns-data null".format(rows_percentage_1))
-# print("===="*30)
-
-
-# In[26]:
-
-
-#Dropping cols with 90% thresold
-plant_data = drop_missing(plant_data_original, plant_missing_data, 90)
-plant_data.shape
+data_merged[['title','data_origin','partner_type']] = data_merged[['title','data_origin','partner_type']].fillna('NO INFO', axis=1)
 
 
 # ### JTD_Data
 
-# In[6]:
+# In[55]:
 
 
 JTD_data_original.head()
+
+
+# In[56]:
+
+
 JTD_data_original.shape
 JTD_data_original.info()
 #Numerical cols
@@ -663,51 +574,165 @@ print(*numeric_columns.columns.tolist(), sep = "\t| ")
 categorical_columns = categorical_features(JTD_data_original)
 print(*categorical_columns.columns.tolist(), sep = "\t| ")
 #DataTypes
-check_datatypes(JTD_data_original)
+#check_datatypes(JTD_data_original)
 #Missing data
 jtd_missing_data = missing_data(JTD_data_original)
-jtd_missing_data
+print(jtd_missing_data)
 # #Missing data for rows
 # rows_percentage_1 = (1 - len(invoice_data_original.dropna(thresh=40)) / len(invoice_data_original)) * 100
 # print("Missing rows %:  {} with 40 columns-data null".format(rows_percentage_1))
 # print("===="*30)
-#Dropping cols with 70% thresold
-jtd_data = drop_missing(JTD_data_original, jtd_missing_data, 40)
-jtd_data.shape
 
 
-# ## Data Trimming  
-# 
-# 
-# ###### Trim Column Name, Discard unwanted columns, Strip unwanted chars from data
-
-# In[27]:
+# In[57]:
 
 
-customer_data = data_trimming(customer_data)
-customer_data = customer_data.drop(columns = ['business_partner'])
-customer_data.head()
-#print(customer_data_['customer_no'].astype(str))
+#Data Trimming and filling missing vals with "NO INFO" tag
+jtd_data = data_trimming(JTD_data_original)
+jtd_data = jtd_data.fillna('NO INFO')
 
 
-# In[28]:
+# In[58]:
 
 
-invoice_data = data_trimming(invoice_data)
-invoice_data = invoice_data.drop(columns = ['unnamed:_0', 'print_status'])
-invoice_data.head()
+JTD_data_original.shape
+
+
+# In[59]:
+
+
+#jtd_data = jtd_data.drop(columns=['unnamed:_0'], axis=1)
+print(jtd_data.shape)
+jtd_data.head()
+
+
+# In[60]:
+
+
+data_merged.tail()
+
+
+# In[61]:
+
+
+df_cols_list = data_merged.columns.tolist()
+print(*df_cols_list, sep=' \t|')
+
+
+# In[62]:
+
+
+#Trial Cell
+amt_0_mask = data_merged.total_amt_wtd_tax == 0.00
+test_data_merged = data_merged[amt_0_mask]
+test_data_merged1 = test_data_merged.loc[:,['job_card_no','labour_total','misc_total','recovrbl_exp']]
+print(test_data_merged1.shape)
+print(data_merged.shape)
+test_data_merged1.head(10)
+
+
+# #### Observation:
+# Almost 52000 rows are with 0 total amount. Hence removing the rows..
+
+# In[63]:
+
+
+data_merged = data_merged.drop(test_data_merged.index, axis=0)
+data_merged.shape
+
+
+# In[64]:
+
+
+# jtd_no_service_cost = jtd_data[np.isin(jtd_data['dbm_order'],test_data_merged.values) == True]
+# jtd_no_service_cost.head()
+
+
+# ## Top states and cities with highest revenue
+
+# In[65]:
+
+
+states_top_revenue = data_merged.groupby('district')['total_amt_wtd_tax'].sum().reset_index()
+states_top_revenue = states_top_revenue.rename({'total_amt_wtd_tax':'total_sum_amt'},axis=1).reset_index()
+states_top_revenue = states_top_revenue.sort_values(by='total_sum_amt', ascending=False)
+#states_top_revenue = states_top_revenue[:15, ].unstack()
+states_top_revenue.head()
+
+
+# In[66]:
+
+
+len(np.isin(data_merged['job_card_no'], jtd_data['dbm_order'].values) == True)
+
+
+# In[67]:
+
+
+data_merged.shape
+
+
+# In[68]:
+
+
+df_merged = data_merged.merge(jtd_data,
+                             left_on='job_card_no',
+                             right_on='dbm_order',how='left')
+df_merged.shape
+
+
+# In[69]:
+
+
+#df_merged.drop_duplicates(subset=['job_card_no'])
+
+
+# In[70]:
+
+
+JTD_data_original.columns
+
+
+# ## Total No of Services done per State
+
+# In[71]:
+
+
+total_services_states = data_merged.groupby('district')['invoice_no'].size()
+total_services_states = total_services_states.sort_values(ascending=False)
+total_services_states = total_services_states.rename('total_services')
+total_services_states.head()
+
+
+# ## Which Parts/Items in heavy demand?
+# ## Which Kind of service is 
+
+# In[72]:
+
+
+top_trending_parts = jtd_data['description'].value_counts()
+#top_trending_parts = top_trending_parts.sort_values(ascending=False)
+top_trending_parts
+
+
+# In[73]:
+
+
+top_trending_item_category = jtd_data['item_category'].value_counts()
+#top_trending_parts = top_trending_parts.sort_values(ascending=False)
+top_trending_item_category
+
+
+# In[74]:
+
+
+category_parts_df = df_merged.groupby('item_category')['description'].agg()
+#category_parts_df = category_parts_df.sort_values(ascending=False)
+#category_parts_df = category_parts_df.rename('total_services')
+category_parts_df
 
 
 # In[ ]:
-
-
-plant_data = data_trimming(plant_data)
-plant_data = plant_data.drop(columns = ['business_partner'])
-plant_data.head()
-#print(customer_data_['customer_no'].astype(str))
-
-
-# In[167]:
 
 
 ###############
@@ -750,135 +775,17 @@ plt.xticks(rotation=60)
 plt.show()
 
 
-# In[ ]:
+# ### Using KNN for prediction of missing values of 'model'
 
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[9]:
-
-
-from sklearn_pandas import CategoricalImputer
-
-
-#Merging invoice_data_ & customer_data_
-print(len(invoice_data_.columns.tolist()) + len(customer_data_.columns.tolist()))
-print("==="*30)
-customer_data_['customer_no'] = customer_data_['customer_no'].astype(str)
-invoice_data_['customer_no'] = invoice_data_['customer_no'].astype(str)
-
-data_merged = pd.merge(invoice_data_, customer_data_, on='customer_no', how='left')
-#data_merged_1 = data_merged_1.sort_values(ascending = True, by = 'customer_no')
-
-print(data_merged.head())
-print("...."*30)
-print(data_merged.tail())
-
-
-# In[10]:
-
-
-# print("==="*30)
-# print(data_merged[data_merged['customer_no'] == "1"])
-# print("==="*30)
-# print(data_merged.shape)
-# print("==="*30)
-
-
-# In[34]:
-
-
-# print(data_merged.isnull().sum().sort_values(ascending= False))
-# print("==="*30)
-# print(data_merged.isna().sum().sort_values(ascending= False))
-# print("==="*30)
-# print(data_merged[data_merged['city'].isnull()])
-# print("==="*30)
-# print(data_merged[data_merged['pin_code'] == 174303]['area','city','pin_code','customer_no'])
-a = data_merged.columns.tolist()
-print(*a, sep = "\t| ")
-
-
-# In[12]:
+# In[264]:
 
 
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.impute import SimpleImputer, MissingIndicator
 from sklearn.pipeline import FeatureUnion, make_pipeline
+from sklearn_pandas import CategoricalImputer
 
-
-# In[139]:
-
-
-df_missing_data = missing_data(data_merged)
-
-missing_data_cols = get_missing_cols(df_missing_data)
-
-missing_data_cols
-
-
-# In[170]:
-
-
-# missing_data_cols.remove('city')
-# missing_data_cols.remove('area')
-# missing_data_cols.remove('regn_no')
-# df_merged = data_merged[missing_data_cols]
-# df_merged['data_origin']= df_merged['data_origin'].astype(str).map(lambda x: x.lstrip('Z'))
-df_merged.head()
-
-
-# In[14]:
-
-
-le = LabelEncoder()
-len(df_merged.model.unique())
-df_merged['model'] = le.fit_transform(df_merged['model'].astype(str))
-# missing_data_cols
-#df_merged.head()
-
-
-# In[15]:
-
-
-# transformer = FeatureUnion(
-#                            transformer_list=[
-#                            ('features', SimpleImputer(strategy='most_frequent')),
-#                            ('indicators', MissingIndicator())])
-# transformer = transformer.fit(data_merged)
-# results = transformer.transform(data_merged)
-# results.shape
-missing_data_cols
-
-
-# In[16]:
-
-
-imp = IterativeImputer(add_indicator=False, estimator=None,
-                 imputation_order='ascending', initial_strategy='most_frequent',
-                 max_iter=10, max_value=None, min_value=None,
-                 n_nearest_features=1,
-                 random_state=0, sample_posterior=False, tol=0.001,
-                 verbose=0)
-imp.fit_transform(df_merged)  
-df_merged.isnull().sum()
-
-
-# In[24]:
-
-
-#data_merged['gender'] = data_merged['title'].astype(int)
-
-
-# ### Using KNN for prediction of missing values of 'model'
 
 # In[169]:
 
@@ -893,36 +800,6 @@ df_merged.isnull().sum()
 # #X_train = X.dropna(axis= 0)
 # #print("X_train shape: ",X_train.shape)
 print(X.head())
-
-
-# In[141]:
-
-
-categorical_cols_df = categorical_features(X)
-numerical_cols_df = numeric_features(X)
-
-
-# In[142]:
-
-
-numerical_cols_df.columns
-
-
-# In[143]:
-
-
-drop_cols_list = ['customer_no','gate_pass_time', 'invoice_time', 'plant_name', 'user_id', 'invoice_no','invoice_date', 'invoice_time', 'jobcard_date', 'job_card_no', 'jobcard_time']
-X = X.drop(columns = drop_cols_list, axis=1)
-X.head(5)
-
-
-# In[166]:
-
-
-cat_feature_df = categorical_features(X)
-cat_cols = cat_feature_df.columns.tolist()
-#cat_cols
-cat_feature_df.isnull().sum()
 
 
 # In[163]:
@@ -946,54 +823,7 @@ encoders = encode_col_by_col(X[cat_cols])
 #encoders['cust_type'].inverse_transform(X['cust_type'])
 
 
-# In[164]:
-
-
-
-
-
-# In[156]:
-
-
-X.head()
-
-
-# In[67]:
-
-
-X_train.isnull().sum()
-
-
-# In[61]:
-
-
-X_test = X[pd.isnull(X['model'])]
-print("X_test shape: ",X_test.shape)
-
-
-# In[68]:
-
-
-#Train K-NN Classifier
-clf = KNeighborsClassifier(5, weights='distance')
-trained_model = clf.fit(X_train.drop(columns = 'model', axis = 1), X_train.loc[:,'model'])
-
-
-# In[65]:
-
-
-#Predicting Missing Values' Class --> 'Model'
-imputed_values = trained_model.predict(X_test.drop(columns = 'model', axis = 1))
-type(imputed_values)
-
-
-# In[ ]:
-
-
-# Join column of predicted class with their other features
-X_with_imputed = X_test['model']
-np.hstack((imputed_values.reshape(-1,1), X_train.drop(columns = 'model', axis = 1)))
-
-# Join two feature matrices
-np.vstack((X_with_imputed, X))
-
+# # Important Checkpoints
+# Sunday 8/12 4.00PM - dataframe,missing vals done
+# 
+# Sunday 8/12 6.53PM - added plots
